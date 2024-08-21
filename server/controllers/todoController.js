@@ -17,7 +17,7 @@ export const getTodoById = (req, res) => {
 export const createTodo = (req, res) => {
   const newTodo = {
     id: idCounter++,
-    text: req.body.text,
+    title: req.body.title,
     completed: req.body.completed || false,
   };
   todos.push(newTodo);
@@ -27,7 +27,7 @@ export const createTodo = (req, res) => {
 export const updateTodo = (req, res) => {
   const todo = todos.find(t => t.id === parseInt(req.params.id));
   if (todo) {
-    todo.text = req.body.text;
+    todo.title = req.body.title;
     todo.completed = req.body.completed;
     res.json(todo);
   } else {
@@ -38,13 +38,16 @@ export const updateTodo = (req, res) => {
 export const patchTodo = (req, res) => {
   const todo = todos.find(t => t.id === parseInt(req.params.id));
   if (todo) {
-    if (req.body.text) {
-      todo.text = req.body.text;
+    const updatedFields = {};
+    if (req.body.title) {
+      todo.title = req.body.title;
+      updatedFields.title = req.body.title;
     }
     if (req.body.completed !== undefined) {
       todo.completed = req.body.completed;
+      updatedFields.completed = req.body.completed;
     }
-    res.json(todo);
+    res.json(updatedFields);
   } else {
     res.status(404).json({ message: 'Todo not found' });
   }

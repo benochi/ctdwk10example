@@ -19,12 +19,14 @@ app.use(helmet());
 app.use(cors());
 app.use(xssClean());
 
-// Rate limiter
+// Rate limiter with custom keyGenerator for local environment
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 5 * 1000, //5 seconds
   max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again after 15 minutes'
+  message: 'Too many requests from this IP, please try again after 15 minutes',
+  keyGenerator: (req) => req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'local',
 });
+
 app.use(limiter);
 
 // Routes
