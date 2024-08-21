@@ -82,30 +82,44 @@ const App = () => {
     });
   };
 
+  const testRateLimiter = async () => {
+    try {
+      for (let i = 0; i < 110; i++) {
+        await axios.get(`${import.meta.env.VITE_API_URL}/todos`);
+      }
+    } catch (error) {
+      alert(error.response.data.message);
+    }
+  };
+
   return (
     <div className="app-container">
       <h1>Todo List</h1>
-      <input 
-        value={newTodo}
-        onChange={e => setNewTodo(e.target.value)}
-        placeholder="Add new todo"
-      />
-      <select value={newUrgency} onChange={e => setNewUrgency(e.target.value)}>
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
-        <option value="high">High</option>
-      </select>
-      <select value={newFrequency} onChange={e => setNewFrequency(e.target.value)}>
-        <option value="none">None</option>
-        <option value="daily">Daily</option>
-        <option value="weekly">Weekly</option>
-        <option value="monthly">Monthly</option>
-      </select>
-      <button onClick={createTodo}>Create Todo</button>
+      <div className="todo-form">
+        <input 
+          value={newTodo}
+          onChange={e => setNewTodo(e.target.value)}
+          placeholder="Add new todo"
+          className="todo-input"
+        />
+        <select value={newUrgency} onChange={e => setNewUrgency(e.target.value)} className="todo-select">
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+        <select value={newFrequency} onChange={e => setNewFrequency(e.target.value)} className="todo-select">
+          <option value="none">None</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+        <button onClick={createTodo} className="todo-button">Create Todo</button>
+        <button onClick={testRateLimiter} className="todo-button">Test Rate Limiter</button>
+      </div>
 
       <ul>
         {todos.map(todo => (
-          <li key={todo.id}>
+          <li key={todo.id} className="todo-item">
             <p><strong>{todo.title}</strong> - {todo.completed ? 'Completed' : 'Not Completed'}</p>
             <p>Urgency: {todo.urgency}</p>
             <p>Frequency: {todo.frequency}</p>
@@ -113,6 +127,7 @@ const App = () => {
               value={updateData[todo.id]?.title || ''}
               onChange={e => handleUpdateChange(todo.id, 'title', e.target.value)}
               placeholder="Update Title"
+              className="todo-input"
             />
             <label>
               Completed:
@@ -122,20 +137,20 @@ const App = () => {
                 onChange={e => handleUpdateChange(todo.id, 'completed', e.target.checked)}
               />
             </label>
-            <select value={updateData[todo.id]?.urgency || 'low'} onChange={e => handleUpdateChange(todo.id, 'urgency', e.target.value)}>
+            <select value={updateData[todo.id]?.urgency || 'low'} onChange={e => handleUpdateChange(todo.id, 'urgency', e.target.value)} className="todo-select">
               <option value="low">Low</option>
               <option value="medium">Medium</option>
               <option value="high">High</option>
             </select>
-            <select value={updateData[todo.id]?.frequency || 'none'} onChange={e => handleUpdateChange(todo.id, 'frequency', e.target.value)}>
+            <select value={updateData[todo.id]?.frequency || 'none'} onChange={e => handleUpdateChange(todo.id, 'frequency', e.target.value)} className="todo-select">
               <option value="none">None</option>
               <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
               <option value="monthly">Monthly</option>
             </select>
-            <button onClick={() => updateTodo(todo.id)}>PUT Update</button>
-            <button onClick={() => patchTodo(todo.id)}>PATCH Update</button>
-            <button onClick={() => deleteTodo(todo.id)}>Delete</button>
+            <button onClick={() => updateTodo(todo.id)} className="todo-button">PUT Update</button>
+            <button onClick={() => patchTodo(todo.id)} className="todo-button">PATCH Update</button>
+            <button onClick={() => deleteTodo(todo.id)} className="todo-button">Delete</button>
           </li>
         ))}
       </ul>
