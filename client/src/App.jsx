@@ -4,6 +4,8 @@ import axios from 'axios';
 const App = () => {
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState('');
+  const [updateTitle, setUpdateTitle] = useState('');
+  const [updateCompleted, setUpdateCompleted] = useState(false);
 
   useEffect(() => {
     fetchTodos();
@@ -21,15 +23,26 @@ const App = () => {
   };
 
   const updateTodo = async (id) => {
-    const response = await axios.put(`${import.meta.env.VITE_API_URL}/todos/${id}`, { title: 'Updated Todo', completed: true });
-    alert(`Updated Todo:\nTitle: ${response.data.title}\nCompleted: ${response.data.completed}`);
+    const response = await axios.put(`${import.meta.env.VITE_API_URL}/todos/${id}`, {
+      title: updateTitle || 'Default Title', // Use default if empty
+      completed: updateCompleted,
+    });
+    alert(`PUT Request:\nTitle: ${response.data.title}\nCompleted: ${response.data.completed}`);
     setTodos(todos.map(todo => todo.id === id ? response.data : todo));
+    setUpdateTitle('');
+    setUpdateCompleted(false);
   };
 
   const patchTodo = async (id) => {
-    const response = await axios.patch(`${import.meta.env.VITE_API_URL}/todos/${id}`, { title: 'Patched Todo', completed: true });
-    alert(`Patched Fields:\n${response.data.title ? `Title: ${response.data.title}` : ''}${response.data.completed !== undefined ? `\nCompleted: ${response.data.completed}` : ''}`);
+    const patchData = {};
+    if (updateTitle) patchData.title = updateTitle;
+    patchData.completed = updateCompleted;
+
+    const response = await axios.patch(`${import.meta.env.VITE_API_URL}/todos/${id}`, patchData);
+    alert(`PATCH Request:\n${response.data.title ? `Title: ${response.data.title}\n` : ''}${response.data.completed !== undefined ? `Completed: ${response.data.completed}` : ''}`);
     setTodos(todos.map(todo => todo.id === id ? { ...todo, ...response.data } : todo));
+    setUpdateTitle('');
+    setUpdateCompleted(false);
   };
 
   const deleteTodo = async (id) => {
@@ -61,8 +74,21 @@ const App = () => {
         {todos.map(todo => (
           <li key={todo.id}>
             {todo.title} - {todo.completed ? 'Completed' : 'Not Completed'}
-            <button onClick={() => updateTodo(todo.id)}>Update</button>
-            <button onClick={() => patchTodo(todo.id)}>Patch</button>
+            <input
+              value={updateTitle}
+              onChange={e => setUpdateTitle(e.target.value)}
+              placeholder="Update Title"
+            />
+            <label>
+              Completed:
+              <input
+                type="checkbox"
+                checked={updateCompleted}
+                onChange={e => setUpdateCompleted(e.target.checked)}
+              />
+            </label>
+            <button onClick={() => updateTodo(todo.id)}>PUT Update</button>
+            <button onClick={() => patchTodo(todo.id)}>PATCH Update</button>
             <button onClick={() => deleteTodo(todo.id)}>Delete</button>
           </li>
         ))}
