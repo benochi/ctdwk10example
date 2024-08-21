@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import './App.css';
 
 const App = () => {
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState('');
-  const [updateTitle, setUpdateTitle] = useState('');
-  const [updateCompleted, setUpdateCompleted] = useState(false);
+  const [newUrgency, setNewUrgency] = useState('low');
+  const [newFrequency, setNewFrequency] = useState('none');
+  const [updateData, setUpdateData] = useState({});
 
   useEffect(() => {
     fetchTodos();
@@ -17,32 +19,52 @@ const App = () => {
   };
 
   const createTodo = async () => {
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/todos`, { title: newTodo });
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/todos`, { 
+      title: newTodo,
+      urgency: newUrgency,
+      frequency: newFrequency,
+    });
     setTodos([...todos, response.data]);
     setNewTodo('');
+    setNewUrgency('low');
+    setNewFrequency('none');
   };
 
   const updateTodo = async (id) => {
     const response = await axios.put(`${import.meta.env.VITE_API_URL}/todos/${id}`, {
-      title: updateTitle || 'Default Title', // Use default if empty
-      completed: updateCompleted,
+      title: updateData[id]?.title || 'Default Title',
+      completed: updateData[id]?.completed,
+      urgency: updateData[id]?.urgency || 'low',
+      frequency: updateData[id]?.frequency || 'none',
     });
-    alert(`PUT Request:\nTitle: ${response.data.title}\nCompleted: ${response.data.completed}`);
+    alert(`PUT Request:\nTitle: ${response.data.title}\nCompleted: ${response.data.completed}\nUrgency: ${response.data.urgency}\nFrequency: ${response.data.frequency}`);
     setTodos(todos.map(todo => todo.id === id ? response.data : todo));
-    setUpdateTitle('');
-    setUpdateCompleted(false);
   };
 
   const patchTodo = async (id) => {
     const patchData = {};
-    if (updateTitle) patchData.title = updateTitle;
-    patchData.completed = updateCompleted;
+    const updatedFields = [];
+
+    if (updateData[id]?.title) {
+      patchData.title = updateData[id].title;
+      updatedFields.push(`Title: ${patchData.title}`);
+    }
+    if (updateData[id]?.completed !== undefined) {
+      patchData.completed = updateData[id].completed;
+      updatedFields.push(`Completed: ${patchData.completed}`);
+    }
+    if (updateData[id]?.urgency) {
+      patchData.urgency = updateData[id].urgency;
+      updatedFields.push(`Urgency: ${patchData.urgency}`);
+    }
+    if (updateData[id]?.frequency) {
+      patchData.frequency = updateData[id].frequency;
+      updatedFields.push(`Frequency: ${patchData.frequency}`);
+    }
 
     const response = await axios.patch(`${import.meta.env.VITE_API_URL}/todos/${id}`, patchData);
-    alert(`PATCH Request:\n${response.data.title ? `Title: ${response.data.title}\n` : ''}${response.data.completed !== undefined ? `Completed: ${response.data.completed}` : ''}`);
+    alert(`PATCH Request:\n${updatedFields.join('\n')}`);
     setTodos(todos.map(todo => todo.id === id ? { ...todo, ...response.data } : todo));
-    setUpdateTitle('');
-    setUpdateCompleted(false);
   };
 
   const deleteTodo = async (id) => {
@@ -50,14 +72,14 @@ const App = () => {
     setTodos(todos.filter(todo => todo.id !== id));
   };
 
-  const testRateLimiter = async () => {
-    try {
-      for (let i = 0; i < 110; i++) {
-        await axios.get(`${import.meta.env.VITE_API_URL}/todos`);
-      }
-    } catch (error) {
-      alert(error.response.data.message);
-    }
+  const handleUpdateChange = (id, field, value) => {
+    setUpdateData({
+      ...updateData,
+      [id]: {
+        ...updateData[id],
+        [field]: value,
+      },
+    });
   };
 
   return (
@@ -68,25 +90,49 @@ const App = () => {
         onChange={e => setNewTodo(e.target.value)}
         placeholder="Add new todo"
       />
+      <select value={newUrgency} onChange={e => setNewUrgency(e.target.value)}>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
+      <select value={newFrequency} onChange={e => setNewFrequency(e.target.value)}>
+        <option value="none">None</option>
+        <option value="daily">Daily</option>
+        <option value="weekly">Weekly</option>
+        <option value="monthly">Monthly</option>
+      </select>
       <button onClick={createTodo}>Create Todo</button>
-      <button onClick={testRateLimiter}>Test Rate Limiter</button>
+
       <ul>
         {todos.map(todo => (
           <li key={todo.id}>
-            {todo.title} - {todo.completed ? 'Completed' : 'Not Completed'}
+            <p><strong>{todo.title}</strong> - {todo.completed ? 'Completed' : 'Not Completed'}</p>
+            <p>Urgency: {todo.urgency}</p>
+            <p>Frequency: {todo.frequency}</p>
             <input
-              value={updateTitle}
-              onChange={e => setUpdateTitle(e.target.value)}
+              value={updateData[todo.id]?.title || ''}
+              onChange={e => handleUpdateChange(todo.id, 'title', e.target.value)}
               placeholder="Update Title"
             />
             <label>
               Completed:
               <input
                 type="checkbox"
-                checked={updateCompleted}
-                onChange={e => setUpdateCompleted(e.target.checked)}
+                checked={updateData[todo.id]?.completed || false}
+                onChange={e => handleUpdateChange(todo.id, 'completed', e.target.checked)}
               />
             </label>
+            <select value={updateData[todo.id]?.urgency || 'low'} onChange={e => handleUpdateChange(todo.id, 'urgency', e.target.value)}>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+            <select value={updateData[todo.id]?.frequency || 'none'} onChange={e => handleUpdateChange(todo.id, 'frequency', e.target.value)}>
+              <option value="none">None</option>
+              <option value="daily">Daily</option>
+              <option value="weekly">Weekly</option>
+              <option value="monthly">Monthly</option>
+            </select>
             <button onClick={() => updateTodo(todo.id)}>PUT Update</button>
             <button onClick={() => patchTodo(todo.id)}>PATCH Update</button>
             <button onClick={() => deleteTodo(todo.id)}>Delete</button>

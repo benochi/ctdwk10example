@@ -19,6 +19,8 @@ export const createTodo = (req, res) => {
     id: idCounter++,
     title: req.body.title,
     completed: req.body.completed || false,
+    urgency: req.body.urgency || 'low',
+    frequency: req.body.frequency || 'none',
   };
   todos.push(newTodo);
   res.status(201).json(newTodo);
@@ -29,6 +31,8 @@ export const updateTodo = (req, res) => {
   if (todo) {
     todo.title = req.body.title;
     todo.completed = req.body.completed;
+    todo.urgency = req.body.urgency;
+    todo.frequency = req.body.frequency;
     res.json(todo);
   } else {
     res.status(404).json({ message: 'Todo not found' });
@@ -46,6 +50,14 @@ export const patchTodo = (req, res) => {
     if (req.body.completed !== undefined) {
       todo.completed = req.body.completed;
       updatedFields.completed = req.body.completed;
+    }
+    if (req.body.urgency) {
+      todo.urgency = req.body.urgency;
+      updatedFields.urgency = req.body.urgency;
+    }
+    if (req.body.frequency) {
+      todo.frequency = req.body.frequency;
+      updatedFields.frequency = req.body.frequency;
     }
     res.json(updatedFields);
   } else {
